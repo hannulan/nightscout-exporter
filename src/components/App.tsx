@@ -120,7 +120,7 @@ class App extends React.Component<{}, IState> {
                             }} />
                     </div>
                     <ButtonToolbar className="mb-3">
-                        <Button variant="primary" onClick={(e) => this.fetchAndConvert()}>Export</Button>
+                        <Button variant="primary" onClick={(e) => this.fetchAndConvertBundle()}>Export</Button>
                         {this.state.working && <Spinner animation="border" bsPrefix="ml-3 mt-1 spinner" />}
                     </ButtonToolbar>
                     {this.state.error &&
@@ -176,47 +176,75 @@ class App extends React.Component<{}, IState> {
         });
     }
 
-    private buildUrl(apiUrl: string, begin: Date, end: Date): string {
+    private buildUrl(apiUrl: string, begin: Date, end: Date, treatmentsOnOff: boolean): string {
         if (!apiUrl.endsWith("/")) {
             apiUrl += "/";
         }
-
-        return url.format(urlParseLax(apiUrl)) +
-            "v1/entries.json?find[dateString][$gte]=" +
-            begin.toISOString() +
-            "&find[dateString][$lt]=" +
-            end.toISOString() +
-            "&count=1000";
+        let apiCall: string = "";
+        if (treatmentsOnOff == false) {
+            apiCall = url.format(urlParseLax(apiUrl)) +
+                "v1/entries.json?find[dateString][$gte]=" +
+                begin.toISOString() +
+                "&find[dateString][$lt]=" +
+                end.toISOString() +
+                "&count=1000";
+        } else {
+          apiCall = url.format(urlParseLax(apiUrl)) +
+              "v1/treatments.json?find[created_at][$gte]=" +
+              begin.toISOString() +
+              "&find[created_at][$lt]=" +
+              end.toISOString() +
+              "&count=1000";
+        }
+        // console.log("- apiCall: ---------------<<<<<<<<<<<<<<---------------<<<<<<<<<<<<<<")
+        // console.log(apiCall)
+        // console.log("----------------z´<<<<<<<<<<<<<<---------------<<<<<<<<<<<<<<")
+        return apiCall;
     }
 
-    private async fetchAll(apiUrl: string, init?: RequestInit): Promise<object[]> {
+    private async fetchAll(apiUrl: string, treatmentsOnOff: boolean, init?: RequestInit): Promise<object[]> {
         const begin = this.state.range[0];
-        let end = this.state.range[1];
+        // const treatmentsOnOff: boolean = true;
+        console.log("treatmentsOnOff: " + treatmentsOnOff);
+        const end = this.state.range[1];
         let data: any[] = [];
         let allData: any[] = [];
-        const count: number = 1000;
+        const allDataT: any[] = [];
+        let allDataE: any[] = [];
 
+        const count: number = 1000;
         do {
-            const response = await fetch(this.buildUrl(apiUrl, begin, end), init);
+          // Get all entries and concat them into onw array
+            const response  = await fetch(this.buildUrl(apiUrl, begin, end, treatmentsOnOff), init);
+            // console.log("response Entries: " + response)
+            // console.log("response Entries2: " + await response.json()
             if (!response.ok) {
                 throw new Error(`Server responded with an error: ${response.status} ${response.statusText}`);
             }
             data = await response.json();
             allData = allData.concat(data);
+            console.log("lenght" + allData.length);
             const lastDate = allData[allData.length - 1].date;
-            end = new Date(lastDate);
+            // end = new Date(lastDate);
         } while (data.length >= count);
+
+        allDataE = allData;
         return allData;
     }
 
-    private async fetchAndConvert() {
+    private async fetchAndConvertBundle() {
+      this.fetchAndConvert(false);
+      this.fetchAndConvert(true);
+    }
+
+    private async fetchAndConvert(treatmentsOnOff: boolean) {
         this.isWorking(true);
         const headers = new Headers();
         if (this.state.apiSecret) {
             const hash = await sha1(this.state.apiSecret);
             headers.set("API-SECRET", hash);
         }
-        this.fetchAll(this.state.url, {
+        this.fetchAll(this.state.url, treatmentsOnOff, {
             cache: "no-cache",
             headers,
             method: "GET",
@@ -228,7 +256,7 @@ class App extends React.Component<{}, IState> {
                 working: false,
             });
             throw new Error();
-        }).then((data: object[]) => {
+        }).then((data: object[]) => { // If no error occur, do this
             if (typeof data.length !== "number") {
                 throw new Error("Unexpected response from Nightscout");
             }
