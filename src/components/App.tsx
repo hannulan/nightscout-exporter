@@ -183,8 +183,6 @@ class App extends React.Component<{}, IState> {
             apiUrl += "/";
         }
         let apiCall: string = "";
-        console.log("begin date: " + begin.toISOString());
-        console.log("end date: " + end.toISOString());
         if (treatmentsOnOff == false) {
             apiCall = url.format(urlParseLax(apiUrl)) +
                 "v1/entries.json?find[dateString][$gte]=" +
