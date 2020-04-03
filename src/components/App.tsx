@@ -120,7 +120,9 @@ class App extends React.Component<{}, IState> {
                             }} />
                     </div>
                     <ButtonToolbar className="mb-3">
-                        <Button variant="primary" onClick={(e) => this.fetchAndConvertBundle()}>Export</Button>
+                        <Button variant="primary" onClick={(e) => this.fetchAndConvertEntries()}>Export Entries</Button>
+                        {this.state.working && <Spinner animation="border" bsPrefix="ml-3 mt-1 spinner" />}
+                        <Button variant="primary" onClick={(e) => this.fetchAndConvertTreatments()}>Export Treatments</Button>
                         {this.state.working && <Spinner animation="border" bsPrefix="ml-3 mt-1 spinner" />}
                     </ButtonToolbar>
                     {this.state.error &&
@@ -181,6 +183,8 @@ class App extends React.Component<{}, IState> {
             apiUrl += "/";
         }
         let apiCall: string = "";
+        console.log("begin date: " + begin.toISOString());
+        console.log("end date: " + end.toISOString());
         if (treatmentsOnOff == false) {
             apiCall = url.format(urlParseLax(apiUrl)) +
                 "v1/entries.json?find[dateString][$gte]=" +
@@ -196,44 +200,45 @@ class App extends React.Component<{}, IState> {
               end.toISOString() +
               "&count=1000";
         }
-        // console.log("- apiCall: ---------------<<<<<<<<<<<<<<---------------<<<<<<<<<<<<<<")
-        // console.log(apiCall)
-        // console.log("----------------z´<<<<<<<<<<<<<<---------------<<<<<<<<<<<<<<")
         return apiCall;
     }
 
     private async fetchAll(apiUrl: string, treatmentsOnOff: boolean, init?: RequestInit): Promise<object[]> {
         const begin = this.state.range[0];
-        // const treatmentsOnOff: boolean = true;
         console.log("treatmentsOnOff: " + treatmentsOnOff);
-        const end = this.state.range[1];
+        const indexCount: number = 0;
+        let end = this.state.range[1];
         let data: any[] = [];
         let allData: any[] = [];
-        const allDataT: any[] = [];
-        let allDataE: any[] = [];
-
         const count: number = 1000;
         do {
-          // Get all entries and concat them into onw array
-            const response  = await fetch(this.buildUrl(apiUrl, begin, end, treatmentsOnOff), init);
-            // console.log("response Entries: " + response)
-            // console.log("response Entries2: " + await response.json()
+            const urlString: string = this.buildUrl(apiUrl, begin, end, treatmentsOnOff);
+            console.log("urlString: " + urlString);
+            const response  = await fetch(urlString, init);
             if (!response.ok) {
                 throw new Error(`Server responded with an error: ${response.status} ${response.statusText}`);
             }
             data = await response.json();
             allData = allData.concat(data);
-            console.log("lenght" + allData.length);
-            const lastDate = allData[allData.length - 1].date;
-            // end = new Date(lastDate);
+            let lastDate;
+            if (!treatmentsOnOff) {
+              lastDate = allData[allData.length - 1].date;
+            } else {
+              lastDate = allData[allData.length - 1].created_at;
+            }
+            end = new Date(lastDate);
         } while (data.length >= count);
-
-        allDataE = allData;
         return allData;
     }
 
     private async fetchAndConvertBundle() {
       this.fetchAndConvert(false);
+      this.fetchAndConvert(true);
+    }
+    private async fetchAndConvertEntries() {
+      this.fetchAndConvert(false);
+    }
+    private async fetchAndConvertTreatments() {
       this.fetchAndConvert(true);
     }
 
