@@ -12,7 +12,7 @@ import {
     Alert,
     Spinner
 } from "react-bootstrap";
-import { StyleSheet} from 'react-native';
+//import { StyleSheet} from 'react-native';
 import { hot } from "react-hot-loader";
 import { ExportFormats, converterFactory } from "../utils/Converter";
 import * as fileSaver from "file-saver";
@@ -139,7 +139,7 @@ class App extends React.Component<{}, IState> {
                             }} />
                     </div>
                     <ButtonToolbar className="mb-3">
-                        <Button variant="primary" onClick={(e) => this.fetchAndConvertEntries()}>Export Entries</Button>
+                        <Button variant="primary" style={{marginRight: 20}} onClick={(e) => this.fetchAndConvertEntries()}>Export Entries</Button>
                         {this.state.working && ".."}
                         <Button variant="primary" onClick={(e) => this.fetchAndConvertTreatments()}>Export Treatments</Button>
                         {this.state.working && <Spinner animation="border" bsPrefix="ml-3 mt-1 spinner" />}
