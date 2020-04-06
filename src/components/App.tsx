@@ -10,8 +10,9 @@ import {
     FormCheck,
     FormLabel,
     Alert,
-    Spinner,
+    Spinner
 } from "react-bootstrap";
+import { StyleSheet} from 'react-native';
 import { hot } from "react-hot-loader";
 import { ExportFormats, converterFactory } from "../utils/Converter";
 import * as fileSaver from "file-saver";
@@ -21,6 +22,7 @@ import DateTimeRangePicker from "@wojtekmaj/react-datetimerange-picker";
 import { sha1 } from "../utils/Crypto";
 import { processData } from "../utils/Processor";
 
+'use strict';
 // const reactLogo = require("./../assets/img/react_logo.svg");
 
 export interface IOptions {
@@ -64,6 +66,23 @@ class App extends React.Component<{}, IState> {
     }
 
     public render() {
+      /*const page = StyleSheet.create({
+        container: {
+          flex: 1,
+          padding: 24,
+          backgroundColor: '#fff',
+        },
+        text: {
+          fontSize: 30,
+          color: '#000'
+        },
+      });*/
+      /*const styles = StyleSheet.create({
+            title: {
+              textAlign: 'center',
+              marginVertical: 8
+            }
+          });*/
         return (
             <div className="app">
                 <Container className="mt-5 mb-5">
@@ -121,7 +140,7 @@ class App extends React.Component<{}, IState> {
                     </div>
                     <ButtonToolbar className="mb-3">
                         <Button variant="primary" onClick={(e) => this.fetchAndConvertEntries()}>Export Entries</Button>
-                        {this.state.working && <Spinner animation="border" bsPrefix="ml-3 mt-1 spinner" />}
+                        {this.state.working && ".."}
                         <Button variant="primary" onClick={(e) => this.fetchAndConvertTreatments()}>Export Treatments</Button>
                         {this.state.working && <Spinner animation="border" bsPrefix="ml-3 mt-1 spinner" />}
                     </ButtonToolbar>
